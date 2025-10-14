@@ -1,2 +1,2 @@
 # Agata
-Intentionally vulnérable web application 
+Intentionally vulnerable web application 

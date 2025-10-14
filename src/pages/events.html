@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agata - Events</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .day-navigation { display: flex; align-items: center; justify-content: center; margin-bottom: 20px; }
+        .day-navigation button { margin: 0 10px; }
+        .event-container { min-height: 200px; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Agata</h1>
+        <nav>
+            <a href="accueil.html">Home</a>
+            <a href="events.html" class="active">Events</a>
+            <a href="login.html">Login</a>
+            <a href="register.html">Sign Up</a>
+        </nav>
+    </header>
+
+    <div class="container">
+        <h2>Events by Day</h2>
+
+        <div class="day-navigation">
+            <button id="prevDay">← Previous</button>
+            <span id="currentDate">Loading...</span>
+            <button id="nextDay">Next →</button>
+        </div>
+
+        <div class="event-container" id="eventContainer">
+            <!-- Events will be loaded here -->
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2025 Agata. All rights reserved.</p>
+    </footer>
+
+    <script src="../js/ajax.js"></script>
+    <script src="../js/script.js"></script>
+</body>
+</html>

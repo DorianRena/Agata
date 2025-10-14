@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agata - Login</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Header / Navigation -->
+    <header>
+        <h1>Agata</h1>
+        <nav>
+            <a href="accueil.html">Home</a>
+            <a href="events.html">Events</a>
+            <a href="login.html" class="active">Login</a>
+            <a href="register.html">Sign Up</a>
+        </nav>
+    </header>
+
+    <!-- Login Form -->
+    <div class="container">
+        <h2>Login to Your Account</h2>
+        <form action="login_process.php" method="post">
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" required>
+
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" required>
+
+            <button type="submit">Login</button>
+        </form>
+        <p>Don't have an account? <a href="register.html">Sign up here</a>.</p>
+    </div>
+
+    <footer>
+        <p>&copy; 2025 Agata. All rights reserved.</p>
+    </footer>
+
+    <script src="../js/ajax.js"></script>
+    <script src="../js/script.js"></script>
+</body>
+</html>

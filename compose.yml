@@ -1,0 +1,32 @@
+services:
+  db:
+    image: postgres:16
+    container_name: agata_db
+    environment:
+      POSTGRES_USER: agata
+      POSTGRES_PASSWORD: agata123
+      POSTGRES_DB: agata_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  web:
+    build: .
+    container_name: agata_web
+    depends_on:
+      - db
+    ports:
+      - "8080:80"
+    volumes:
+      - ./src:/var/www/html
+    environment:
+      DB_SERVER: db
+      DB_PORT: 5432
+      DB_NAME: agata_db
+      DB_USER: agata
+      DB_PWD: agata123
+
+volumes:
+  db_data:
