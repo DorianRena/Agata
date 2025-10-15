@@ -217,3 +217,100 @@ function formatDate(date) {
     const dd = String(date.getDate()).padStart(2,'0');
     return `${yyyy}-${mm}-${dd}`;
 }
+
+
+
+// --- CREATE_EVENT PAGE ---
+const createForm = document.getElementById("createEventForm");
+const myEventsContainer = document.getElementById("myEventsContainer");
+const userId = localStorage.getItem("userId");
+
+if (createForm && myEventsContainer) {
+    if (!userId) {
+        alert("Vous devez être connecté pour er ou gérer vos événements.");
+        window.location.href = "login.html";
+    } else {
+        loadMyEvents(); // charge les événements de l'utilisateur
+
+        // Création
+        createForm.addEventListener("submit", (e) => {
+            e.preventDefault();
+            const data = {
+                title: document.getElementById("title").value,
+                description: document.getElementById("description").value,
+                event_date: document.getElementById("event_date").value,
+                event_time: document.getElementById("event_time").value,
+                location: document.getElementById("location").value,
+                id_user: userId
+            };
+            ajaxPost("../php/request.php/create_event", data, (res) => {
+                if(res === true){
+                    alert("Événement créé !");
+                    createForm.reset();
+                    loadMyEvents();
+                } else {
+                    alert("Erreur lors de la création de l'événement.");
+                }
+            });
+        });
+
+        // Charger les événements
+        function loadMyEvents() {
+            ajaxGet(`../php/request.php/my_events?id_user=${userId}`, (events) => {
+                if(events.length === 0){
+                    myEventsContainer.innerHTML = "<p>Vous n'avez créé aucun événement.</p>";
+                    return;
+                }
+
+                myEventsContainer.innerHTML = events.map(ev => `
+                    <div class="event-card" data-id="${ev.id_event}">
+                        <h3>${ev.title}</h3>
+                        <p><strong>Date :</strong> ${ev.event_date} ${ev.event_time}</p>
+                        <p><strong>Lieu :</strong> ${ev.location || 'Non précisé'}</p>
+                        <p>${ev.description}</p>
+                        <button onclick="editEvent(${ev.id_event})">Modifier</button>
+                        <button onclick="deleteEvent(${ev.id_event})" class="btn-outline">Supprimer</button>
+                    </div>
+                `).join('');
+            });
+        }
+
+        // Modifier un événement
+        window.editEvent = function(id_event){
+            const card = document.querySelector(`.event-card[data-id='${id_event}']`);
+            const title = prompt("Nouveau titre :", card.querySelector("h3").textContent);
+            const desc = prompt("Nouvelle description :", card.querySelector("p:nth-of-type(3)").textContent);
+            const date = prompt("Nouvelle date (YYYY-MM-DD) :", card.querySelector("p:nth-of-type(1)").textContent.split(' ')[1]);
+            const time = prompt("Nouvelle heure (HH:MM) :", card.querySelector("p:nth-of-type(1)").textContent.split(' ')[2]);
+            const location = prompt("Nouveau lieu :", card.querySelector("p:nth-of-type(2)").textContent.replace("Lieu : ", ""));
+
+            ajaxPost("../php/request.php/edit_event", { id_event, title, description: desc, event_date: date, event_time: time, location }, (res)=>{
+                if(res === true) loadMyEvents();
+                else alert("Erreur lors de la modification.");
+            });
+        }
+
+        // Supprimer un événement
+        window.deleteEvent = function(id_event){
+            if(confirm("Voulez-vous vraiment supprimer cet événement ?")){
+                ajaxPost("../php/request.php/delete_event", { id_event }, (res)=>{
+                    if(res === true) loadMyEvents();
+                    else alert("Erreur lors de la suppression.");
+                });
+            }
+        }
+    }
+}
+
+// --- Vérification d'accès à create_event.html ---
+document.addEventListener("DOMContentLoaded", () => {
+    const userId = localStorage.getItem("userId");
+    // On vérifie si on est sur la page create_event
+    if (window.location.pathname.includes("create_event.html")) {
+        if (!userId) {
+            alert("Vous devez être connecté pour accéder à cette page.");
+            window.location.href = "login.html";
+            return;
+        }
+    }
+});

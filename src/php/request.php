@@ -82,6 +82,37 @@ if ($requesttype == "inscription") {
             $request = dbRegisterEvent($db, $_POST['id_user'], $_POST['id_event']);
         }
     }
+} elseif($requesttype == "create_event" && $_SERVER['REQUEST_METHOD'] == "POST") {
+    $stmt = $db->prepare("
+        INSERT INTO events (title, description, event_date, event_time, location, created_by)
+        VALUES (:title, :description, :event_date, :event_time, :location, :created_by)
+    ");
+    $stmt->bindParam(':title', $_POST['title']);
+    $stmt->bindParam(':description', $_POST['description']);
+    $stmt->bindParam(':event_date', $_POST['event_date']);
+    $stmt->bindParam(':event_time', $_POST['event_time']);
+    $stmt->bindParam(':location', $_POST['location']);
+    $stmt->bindParam(':created_by', $_POST['id_user']);
+    $request = $stmt->execute();
+} elseif($requesttype == "my_events" && $_SERVER['REQUEST_METHOD'] == "GET"){
+    $id_user = $_GET['id_user'];
+    $stmt = $db->prepare("SELECT * FROM events WHERE created_by=:id_user ORDER BY event_date, event_time");
+    $stmt->bindParam(':id_user', $id_user);
+    $stmt->execute();
+    $request = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} elseif($requesttype == "edit_event" && $_SERVER['REQUEST_METHOD'] == "POST"){
+    $stmt = $db->prepare("UPDATE events SET title=:title, description=:description, event_date=:event_date, event_time=:event_time, location=:location WHERE id_event=:id_event");
+    $stmt->bindParam(':title', $_POST['title']);
+    $stmt->bindParam(':description', $_POST['description']);
+    $stmt->bindParam(':event_date', $_POST['event_date']);
+    $stmt->bindParam(':event_time', $_POST['event_time']);
+    $stmt->bindParam(':location', $_POST['location']);
+    $stmt->bindParam(':id_event', $_POST['id_event']);
+    $request = $stmt->execute();
+} elseif($requesttype == "delete_event" && $_SERVER['REQUEST_METHOD'] == "POST"){
+    $stmt = $db->prepare("DELETE FROM events WHERE id_event=:id_event");
+    $stmt->bindParam(':id_event', $_POST['id_event']);
+    $request = $stmt->execute();
 } else {
     $request = ["error" => "Invalid endpoint"];
 }

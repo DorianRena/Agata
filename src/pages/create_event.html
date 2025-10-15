@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agata - Gérer mes événements</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+    <h1>Agata</h1>
+    <nav id="navbar"></nav>
+</header>
+
+<div class="container">
+    <h2>Gérer mes événements</h2>
+    <form id="createEventForm">
+        <label for="title">Titre :</label>
+        <input type="text" id="title" required>
+
+        <label for="description">Description :</label>
+        <textarea id="description" rows="4"></textarea>
+
+        <label for="event_date">Date :</label>
+        <input type="date" id="event_date" required>
+
+        <label for="event_time">Heure :</label>
+        <input type="time" id="event_time" required>
+
+        <label for="location">Lieu :</label>
+        <input type="text" id="location">
+
+        <button type="submit">Créer l'événement</button>
+    </form>
+
+    <h2>Mes événements</h2>
+    <div id="myEventsContainer">
+        <!-- Mes événements seront listés ici -->
+    </div>
+</div>
+
+<footer>
+    <p>&copy; 2025 Agata. Tous droits réservés.</p>
+</footer>
+
+<script src="../js/ajax.js"></script>
+<script src="../js/script.js"></script>
+</body>
+</html>
