@@ -31,20 +31,56 @@ if ($requesttype == "inscription") {
 } elseif ($requesttype == "events") {
     if ($_SERVER['REQUEST_METHOD'] == "GET") {
         $date = $_GET['date'] ?? date('Y-m-d');
-        $request = dbGetEventsByDate($db, $date);
-    } elseif ($_SERVER['REQUEST_METHOD'] == "POST") {
-        $request = dbCreateEvent(
-            $db,
-            $_POST['title'],
-            $_POST['description'],
-            $_POST['event_date'],
-            $_POST['event_time'],
-            $_POST['id_user']
-        );
+        $id_user = $_GET['id_user'] ?? null;
+
+        // Récupérer les événements avec l'organisateur
+        $stmt = $db->prepare("
+            SELECT e.*, u.nom AS org_nom, u.prenom AS org_prenom
+            FROM events e
+            JOIN users u ON e.created_by = u.id_user
+            WHERE e.event_date = :date
+            ORDER BY e.event_time ASC
+        ");
+        $stmt->bindParam(':date', $date);
+        $stmt->execute();
+        $events = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Vérifier pour chaque event si l'utilisateur est inscrit
+        if ($id_user) {
+            foreach ($events as &$event) {
+                $stmt2 = $db->prepare("SELECT COUNT(*) FROM registrations WHERE id_event=:id_event AND id_user=:id_user");
+                $stmt2->bindParam(':id_event', $event['id_event']);
+                $stmt2->bindParam(':id_user', $id_user);
+                $stmt2->execute();
+                $event['registered'] = $stmt2->fetchColumn() > 0;
+            }
+        } else {
+            foreach ($events as &$event) {
+                $event['registered'] = false;
+            }
+        }
+
+        $request = $events;
+    }
+} elseif ($requesttype == "unregister_event") {
+    if ($_SERVER['REQUEST_METHOD'] == "POST") {
+        $stmt = $db->prepare("DELETE FROM registrations WHERE id_event=:id_event AND id_user=:id_user");
+        $stmt->bindParam(':id_event', $_POST['id_event']);
+        $stmt->bindParam(':id_user', $_POST['id_user']);
+        $request = $stmt->execute();
     }
 } elseif ($requesttype == "register_event") {
     if ($_SERVER['REQUEST_METHOD'] == "POST") {
-        $request = dbRegisterEvent($db, $_POST['id_user'], $_POST['id_event']);
+        // Vérifie si l'utilisateur n'est pas déjà inscrit
+        $stmt = $db->prepare("SELECT COUNT(*) FROM registrations WHERE id_event=:id_event AND id_user=:id_user");
+        $stmt->bindParam(':id_event', $_POST['id_event']);
+        $stmt->bindParam(':id_user', $_POST['id_user']);
+        $stmt->execute();
+        if($stmt->fetchColumn() > 0){
+            $request = false; // déjà inscrit
+        } else {
+            $request = dbRegisterEvent($db, $_POST['id_user'], $_POST['id_event']);
+        }
     }
 } else {
     $request = ["error" => "Invalid endpoint"];

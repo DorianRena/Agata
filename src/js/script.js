@@ -91,8 +91,8 @@ document.addEventListener("DOMContentLoaded", () => {
             nav.innerHTML = `
                 <a href="accueil.html" ${page === "accueil.html" ? "class='active'" : ""}>Accueil</a>
                 <a href="events.html" ${page === "events.html" ? "class='active'" : ""}>Événements</a>
-                <a href="login.html">Connexion</a>
-                <a href="register.html">Inscription</a>
+                <a href="login.html" ${page === "login.html" ? "class='active'" : ""}>Connexion</a>
+                <a href="register.html" ${page === "register.html" ? "class='active'" : ""}>Inscription</a>
             `;
         }
     }
@@ -127,46 +127,81 @@ document.addEventListener("DOMContentLoaded", () => {
 
 });
 
-// --- Fonction pour charger les événements ---
+// --- Chargement des événements ---
 function loadEvents() {
     const currentDateSpan = document.getElementById('currentDate');
     const eventContainer = document.getElementById('eventContainer');
     const formattedDate = formatDate(currentDate);
     displayDate(currentDate);
 
-    ajaxGet(`../php/request.php/events?date=${formattedDate}`, (events) => {
+    const userId = localStorage.getItem("userId");
+
+    ajaxGet(`../php/request.php/events?date=${formattedDate}&id_user=${userId || ''}`, (events) => {
         if(eventContainer){
-            const userId = localStorage.getItem("userId");
             if(events.length === 0){
                 eventContainer.innerHTML = '<p>Aucun événement pour cette journée.</p>';
                 return;
             }
 
-            eventContainer.innerHTML = events.map(event => `
-                <div class="event-card">
-                    <h3>${event.title}</h3>
-                    <p><strong>Heure :</strong> ${event.event_time}</p>
-                    <p>${event.description}</p>
-                    ${userId ? `<button onclick="registerEvent(${event.id_event})">S'inscrire</button>` : ''}
-                </div>
-            `).join('');
+            eventContainer.innerHTML = events.map(event => {
+                let actionHtml = '';
+                if(userId){
+                    if(event.registered){
+                        // Déjà inscrit → bouton outline pour se désinscrire
+                        actionHtml = `<button class="btn-unregister" onclick="unregisterEvent(${event.id_event}, this)">Se désinscrire</button>`;
+                    } else {
+                        // Non inscrit → bouton classique pour s'inscrire
+                        actionHtml = `<button onclick="registerEvent(${event.id_event}, this)">S'inscrire</button>`;
+                    }
+                }
+                return `
+                    <div class="event-card">
+                        <h3>${event.title}</h3>
+                        <p><strong>Heure :</strong> ${event.event_time}</p>
+                        <p>${event.description}</p>
+                        <p><strong>Organisateur :</strong> ${event.org_prenom} ${event.org_nom}</p>
+                        ${actionHtml}
+                    </div>
+                `;
+                }).join('');
+
         }
     });
 }
 
-// --- Fonction d'inscription à un événement ---
-function registerEvent(eventId) {
+// --- S'inscrire à un événement ---
+function registerEvent(eventId, btnElement) {
     const id_user = localStorage.getItem("userId");
-    if(!id_user) {
-        alert("Veuillez vous connecter pour vous inscrire à un événement.");
-        return;
-    }
+    if(!id_user) { alert("Veuillez vous connecter."); return; }
 
     ajaxPost('../php/request.php/register_event', { id_user, id_event: eventId }, (res) => {
-        if(res === true) alert('Inscription réussie !');
-        else alert('Erreur lors de l’inscription.');
+        if(res === true){
+            btnElement.textContent = "Se désinscrire";
+            btnElement.classList.add("btn-unregister");
+            btnElement.onclick = () => unregisterEvent(eventId, btnElement);
+        } else {
+            alert('Vous êtes déjà inscrit.');
+        }
     });
 }
+
+// --- Se désinscrire d'un événement ---
+function unregisterEvent(eventId, btnElement) {
+    const id_user = localStorage.getItem("userId");
+    if(!id_user) { alert("Veuillez vous connecter."); return; }
+
+    ajaxPost('../php/request.php/unregister_event', { id_user, id_event: eventId }, (res) => {
+        if(res === true){
+            btnElement.textContent = "S'inscrire";
+            btnElement.classList.remove("btn-unregister");
+            btnElement.onclick = () => registerEvent(eventId, btnElement);
+        } else {
+            alert('Erreur lors de la désinscription.');
+        }
+    });
+}
+
+
 
 // --- Affichage de la date ---
 function displayDate(date) {
