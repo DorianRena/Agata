@@ -45,22 +45,50 @@ if ($requesttype == "inscription") {
         $stmt->execute();
         $events = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        // Vérifier pour chaque event si l'utilisateur est inscrit
-        if ($id_user) {
-            foreach ($events as &$event) {
+        $filteredEvents = [];
+
+        foreach ($events as $event) {
+            $isPrivate = isset($event['is_private']) && $event['is_private'];
+
+            // Si l'événement est privé, on vérifie si l'utilisateur est autorisé
+            if ($isPrivate) {
+                // Si pas d'utilisateur connecté => ignorer
+                if (!$id_user) {
+                    continue;
+                }
+
+                $stmtPriv = $db->prepare("
+                    SELECT COUNT(*) 
+                    FROM event_allowed_users 
+                    WHERE id_event = :id_event AND id_user = :id_user
+                ");
+                $stmtPriv->bindParam(':id_event', $event['id_event']);
+                $stmtPriv->bindParam(':id_user', $id_user);
+                $stmtPriv->execute();
+
+                $isAllowed = $stmtPriv->fetchColumn() > 0;
+
+                if (!$isAllowed) {
+                    // L'utilisateur n'est pas autorisé → on ignore l'événement
+                    continue;
+                }
+            }
+
+            // Vérifier pour chaque event si l'utilisateur est inscrit
+            if ($id_user) {
                 $stmt2 = $db->prepare("SELECT COUNT(*) FROM registrations WHERE id_event=:id_event AND id_user=:id_user");
                 $stmt2->bindParam(':id_event', $event['id_event']);
                 $stmt2->bindParam(':id_user', $id_user);
                 $stmt2->execute();
                 $event['registered'] = $stmt2->fetchColumn() > 0;
-            }
-        } else {
-            foreach ($events as &$event) {
+            } else {
                 $event['registered'] = false;
             }
+
+            $filteredEvents[] = $event;
         }
 
-        $request = $events;
+        $request = $filteredEvents;
     }
 } elseif ($requesttype == "unregister_event") {
     if ($_SERVER['REQUEST_METHOD'] == "POST") {

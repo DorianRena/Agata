@@ -25,9 +25,14 @@ CREATE TABLE registrations (
     id_event INT REFERENCES events(id_event)
 );
 
+CREATE TABLE event_allowed_users (
+     id_event INT REFERENCES events(id_event) ON DELETE CASCADE,
+     id_user INT REFERENCES users(id_user) ON DELETE CASCADE,
+     PRIMARY KEY (id_event, id_user)
+);
 
 INSERT INTO users (nom, prenom, date_naissance, email, mdp)
-VALUES ('Dupont', 'Jean', '1990-01-01', 'jean.dupont@example.com', 'password_hash_here');
+VALUES ('Dupont', 'Jean', '1990-01-01', 'jean.dupont@example.com', '$2y$10$gZudOdNFowg5xxUAJqkuWe5ipVDwKty9X1PTnvVSQUvw5A6JVjD4O');
 
 INSERT INTO events (title, description, event_date, event_time, created_by, location)
 VALUES 
@@ -36,3 +41,12 @@ VALUES
 ('Meetup Agata3', 'Présentation du projet et discussion.3', CURRENT_DATE, '17:00', 1, 'Salle 103'),
 ('Hackathon PHP', 'Créer une mini app en 4h !', CURRENT_DATE + INTERVAL '1 day', '14:00', 1, 'Salle 101'),
 ('Afterwork Dev', 'Apéro et discussions tech.', CURRENT_DATE + INTERVAL '2 day', '19:00', 1, 'Salle 102');
+
+INSERT INTO events (title, description, is_private, event_date, event_time, created_by, location)
+VALUES
+('Private Event', 'Diner 3 étoiles', true, CURRENT_DATE + INTERVAL '2 day', '19:00', 1, 'Salle 106'),
+('Hidden Event', 'flag : bROkEN 4cC3$5 CONTr0L', true, CURRENT_DATE + INTERVAL '1 day', '19:00', 1, 'Salle 1');
+
+INSERT INTO event_allowed_users (id_event, id_user)
+VALUES
+(6, 1);
