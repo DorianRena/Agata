@@ -82,9 +82,27 @@ if ($requesttype == "inscription") {
             $request = dbRegisterEvent($db, $_POST['id_user'], $_POST['id_event']);
         }
     }
+} elseif ($requesttype == "event") {
+    if ($_SERVER['REQUEST_METHOD'] == "GET") {
+        $id_event = $_GET['id'] ?? null;
+
+        // Récupérer les événements avec l'organisateur
+        $stmt = $db->prepare("
+            SELECT e.*, u.nom AS org_nom, u.prenom AS org_prenom
+            FROM events e
+            JOIN users u ON e.created_by = u.id_user
+            WHERE e.id_event = :id
+            ORDER BY e.event_time ASC
+        ");
+        $stmt->bindParam(':id', $id_event);
+        $stmt->execute();
+        $event = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        $request = $event;
+    }
 } else {
     $request = ["error" => "Invalid endpoint"];
 }
 
 echo json_encode($request);
-?>
+
