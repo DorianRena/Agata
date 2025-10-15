@@ -158,6 +158,7 @@ function loadEvents() {
                     <div class="event-card">
                         <h3>${event.title}</h3>
                         <p><strong>Heure :</strong> ${event.event_time}</p>
+                        <p><strong>Lieu :</strong> ${event.location || 'Non précisé'}</p>
                         <p>${event.description}</p>
                         <p><strong>Organisateur :</strong> ${event.org_prenom} ${event.org_nom}</p>
                         ${actionHtml}

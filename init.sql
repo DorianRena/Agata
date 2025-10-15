@@ -15,6 +15,7 @@ CREATE TABLE events (
     event_date DATE NOT NULL,
     event_time TIME NOT NULL,
     is_private BOOLEAN,
+    location VARCHAR(255),
     created_by INT REFERENCES users(id_user)
 );
 
@@ -28,10 +29,10 @@ CREATE TABLE registrations (
 INSERT INTO users (nom, prenom, date_naissance, email, mdp)
 VALUES ('Dupont', 'Jean', '1990-01-01', 'jean.dupont@example.com', 'password_hash_here');
 
-INSERT INTO events (title, description, event_date, event_time, created_by)
+INSERT INTO events (title, description, event_date, event_time, created_by, location)
 VALUES 
-('Meetup Agata', 'Présentation du projet et discussion.', CURRENT_DATE, '18:00', 1),
-('Meetup Agata2', 'Présentation du projet et discussion.2', CURRENT_DATE, '19:00', 1),
-('Meetup Agata3', 'Présentation du projet et discussion.3', CURRENT_DATE, '17:00', 1),
-('Hackathon PHP', 'Créer une mini app en 4h !', CURRENT_DATE + INTERVAL '1 day', '14:00', 1),
-('Afterwork Dev', 'Apéro et discussions tech.', CURRENT_DATE + INTERVAL '2 day', '19:00', 1);
+('Meetup Agata', 'Présentation du projet et discussion.', CURRENT_DATE, '18:00', 1, 'Salle 101'),
+('Meetup Agata2', 'Présentation du projet et discussion.2', CURRENT_DATE, '19:00', 1, 'Salle 102'),
+('Meetup Agata3', 'Présentation du projet et discussion.3', CURRENT_DATE, '17:00', 1, 'Salle 103'),
+('Hackathon PHP', 'Créer une mini app en 4h !', CURRENT_DATE + INTERVAL '1 day', '14:00', 1, 'Salle 101'),
+('Afterwork Dev', 'Apéro et discussions tech.', CURRENT_DATE + INTERVAL '2 day', '19:00', 1, 'Salle 102');
