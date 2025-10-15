@@ -170,3 +170,27 @@ footer {
     }
 }
 
+
+.logout-btn {
+    background-color: #007BFF; 
+    color: white;              
+    border: none;               
+    cursor: pointer;
+    padding: 10px 15px;
+    border-radius: 4px;       
+    font-size: 14px;
+    font-weight: bold;
+    margin-left: 15px;
+}
+
+.logout-btn:hover {
+    background-color: #0056b3;
+    color: white;
+}
+
+.day-navigation { display: flex; align-items: center; justify-content: center; margin-bottom: 20px; }
+.day-navigation button { margin: 0 10px; }
+.event-container { min-height: 200px; }
+.event-card { border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; border-radius: 8px; }
+.create-event-btn { margin-bottom: 20px; }
+nav .user-info { font-weight: bold; margin-left: 20px; }

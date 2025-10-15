@@ -1,78 +1,183 @@
 let currentDate = new Date();
 
-const currentDateSpan = document.getElementById('currentDate');
-const eventContainer = document.getElementById('eventContainer');
+document.addEventListener("DOMContentLoaded", () => {
+    // --- NAVBAR dynamique ---
+    updateNavbar();
 
-/**
- * Formate une date en "Weekday, DD Month YYYY"
- * Exemple : "Tuesday, 14 October 2025"
- */
-function displayDate(date) {
-    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-    // 'fr-FR' pour le français
-    currentDateSpan.textContent = date.toLocaleDateString('fr-FR', options);
-}
+    // --- LOGIN ---
+    const loginForm = document.getElementById("loginForm");
+    if (loginForm) {
+        loginForm.addEventListener("submit", (e) => {
+            e.preventDefault();
+            const email = document.getElementById("loginEmail").value;
+            const mdp = document.getElementById("loginPassword").value;
+            const errorMsg = document.getElementById("loginError");
 
+            ajaxPost("../php/request.php/login", { email, mdp }, (response) => {
+                if (response !== "error" && response) {
+                    localStorage.setItem("userId", response[0]);
+                    localStorage.setItem("userNom", response[1]);
+                    localStorage.setItem("userPrenom", response[2]);
+                    window.location.href = "events.html";
+                } else {
+                    if(errorMsg) errorMsg.textContent = "Email ou mot de passe incorrect.";
+                }
+            });
+        });
+    }
 
-/**
- * Formate une date pour l'API au format YYYY-MM-DD
- */
-function formatDate(date) {
-    const yyyy = date.getFullYear();
-    const mm = String(date.getMonth() + 1).padStart(2, '0');
-    const dd = String(date.getDate()).padStart(2, '0');
-    return `${yyyy}-${mm}-${dd}`;
-}
+    // --- REGISTER ---
+    const registerForm = document.getElementById("registerForm");
+    if (registerForm) {
+        registerForm.addEventListener("submit", (e) => {
+            e.preventDefault();
+            const nom = document.getElementById("regNom").value;
+            const prenom = document.getElementById("regPrenom").value;
+            const date_naissance = document.getElementById("regDate").value;
+            const email = document.getElementById("regEmail").value;
+            const mdp = document.getElementById("regPassword").value;
+            const confirmMdp = document.getElementById("regConfirmPassword").value;
+            const errorMsg = document.getElementById("passwordError");
 
-/**
- * Charge les événements pour la date actuelle
- */
+            if (mdp.length < 8 || !/[A-Z]/.test(mdp) || !/[0-9]/.test(mdp)) {
+                if(errorMsg) errorMsg.textContent = "Mot de passe trop faible (min 8 caractères, 1 majuscule, 1 chiffre).";
+                return;
+            }
+            if (mdp !== confirmMdp) {
+                if(errorMsg) errorMsg.textContent = "Les mots de passe ne correspondent pas.";
+                return;
+            }
+            if(errorMsg) errorMsg.textContent = "";
+
+            const data = { nom, prenom, date_naissance, email, mdp };
+            ajaxPost("../php/request.php/inscription", data, (response) => {
+                if (response === true) {
+                    alert("Inscription réussie ! Vous pouvez maintenant vous connecter.");
+                    window.location.href = "login.html";
+                } else if (response === "Already") {
+                    if(errorMsg) errorMsg.textContent = "Un compte existe déjà avec cet email.";
+                } else {
+                    if(errorMsg) errorMsg.textContent = "Erreur lors de l'inscription.";
+                }
+            });
+        });
+    }
+
+    // --- NAVBAR + BOUTON DÉCONNEXION ---
+    function updateNavbar() {
+        const nav = document.getElementById("navbar");
+        if (!nav) return;
+
+        const userId = localStorage.getItem("userId");
+        const nom = localStorage.getItem("userNom");
+        const prenom = localStorage.getItem("userPrenom");
+
+        // Détecte la page courante
+        const page = window.location.pathname.split("/").pop();
+
+        if (userId) {
+            nav.innerHTML = `
+                <a href="accueil.html" ${page === "accueil.html" ? "class='active'" : ""}>Accueil</a>
+                <a href="events.html" ${page === "events.html" ? "class='active'" : ""}>Événements</a>
+                <span class="user-info">${prenom} ${nom}</span>
+                <button id="logoutBtn" class="logout-btn">Déconnexion</button>
+            `;
+            const logoutBtn = document.getElementById("logoutBtn");
+            logoutBtn.addEventListener("click", () => {
+                localStorage.clear();
+                window.location.href = "accueil.html";
+            });
+        } else {
+            nav.innerHTML = `
+                <a href="accueil.html" ${page === "accueil.html" ? "class='active'" : ""}>Accueil</a>
+                <a href="events.html" ${page === "events.html" ? "class='active'" : ""}>Événements</a>
+                <a href="login.html">Connexion</a>
+                <a href="register.html">Inscription</a>
+            `;
+        }
+    }
+
+    // --- ÉVÉNEMENTS ---
+    const currentDateSpan = document.getElementById('currentDate');
+    const eventContainer = document.getElementById('eventContainer');
+    const createBtn = document.getElementById('createEventBtn');
+
+    if(currentDateSpan && eventContainer) {
+        loadEvents();
+        const prevBtn = document.getElementById('prevDay');
+        const nextBtn = document.getElementById('nextDay');
+
+        if(prevBtn) prevBtn.addEventListener('click', () => {
+            currentDate.setDate(currentDate.getDate() - 1);
+            loadEvents();
+        });
+        if(nextBtn) nextBtn.addEventListener('click', () => {
+            currentDate.setDate(currentDate.getDate() + 1);
+            loadEvents();
+        });
+    }
+
+    if(createBtn) {
+        const userId = localStorage.getItem("userId");
+        if(userId) createBtn.style.display = "block";
+        createBtn.addEventListener("click", () => {
+            window.location.href = "create_event.html";
+        });
+    }
+
+});
+
+// --- Fonction pour charger les événements ---
 function loadEvents() {
+    const currentDateSpan = document.getElementById('currentDate');
+    const eventContainer = document.getElementById('eventContainer');
     const formattedDate = formatDate(currentDate);
     displayDate(currentDate);
-    eventContainer.innerHTML = 'Loading...';
-    
+
     ajaxGet(`../php/request.php/events?date=${formattedDate}`, (events) => {
-        if(events.length === 0) {
-            eventContainer.innerHTML = '<p>No events for this day.</p>';
-            return;
-        }
+        if(eventContainer){
+            const userId = localStorage.getItem("userId");
+            if(events.length === 0){
+                eventContainer.innerHTML = '<p>Aucun événement pour cette journée.</p>';
+                return;
+            }
 
-        eventContainer.innerHTML = events.map(event => `
-            <div class="event-card">
-                <h3>${event.title}</h3>
-                <p><strong>Time:</strong> ${event.event_time}</p>
-                <p>${event.description}</p>
-                <button onclick="registerEvent(${event.id_event})">Register</button>
-            </div>
-        `).join('');
+            eventContainer.innerHTML = events.map(event => `
+                <div class="event-card">
+                    <h3>${event.title}</h3>
+                    <p><strong>Heure :</strong> ${event.event_time}</p>
+                    <p>${event.description}</p>
+                    ${userId ? `<button onclick="registerEvent(${event.id_event})">S'inscrire</button>` : ''}
+                </div>
+            `).join('');
+        }
     });
 }
 
-/**
- * Inscrire un utilisateur à un événement
- */
+// --- Fonction d'inscription à un événement ---
 function registerEvent(eventId) {
-    const id_user = prompt("Enter your user ID to register:"); // À remplacer par session réelle
+    const id_user = localStorage.getItem("userId");
+    if(!id_user) {
+        alert("Veuillez vous connecter pour vous inscrire à un événement.");
+        return;
+    }
+
     ajaxPost('../php/request.php/register_event', { id_user, id_event: eventId }, (res) => {
-        if(res === true) {
-            alert('Successfully registered!');
-        } else {
-            alert('Error registering for event.');
-        }
+        if(res === true) alert('Inscription réussie !');
+        else alert('Erreur lors de l’inscription.');
     });
 }
 
-// Navigation jours
-document.getElementById('prevDay').addEventListener('click', () => {
-    currentDate.setDate(currentDate.getDate() - 1);
-    loadEvents();
-});
+// --- Affichage de la date ---
+function displayDate(date) {
+    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    const currentDateSpan = document.getElementById('currentDate');
+    if(currentDateSpan) currentDateSpan.textContent = date.toLocaleDateString('fr-FR', options);
+}
 
-document.getElementById('nextDay').addEventListener('click', () => {
-    currentDate.setDate(currentDate.getDate() + 1);
-    loadEvents();
-});
-
-// Chargement initial
-loadEvents();
+function formatDate(date) {
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2,'0');
+    const dd = String(date.getDate()).padStart(2,'0');
+    return `${yyyy}-${mm}-${dd}`;
+}
