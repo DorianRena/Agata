@@ -16,19 +16,22 @@
     <h2>Gérer mes événements</h2>
     <form id="createEventForm">
         <label for="title">Titre :</label>
-        <input type="text" id="title" required>
+        <input type="text" id="title" name="title" required>
 
         <label for="description">Description :</label>
-        <textarea id="description" rows="4"></textarea>
+        <textarea id="description" name="description" rows="4"></textarea>
 
         <label for="event_date">Date :</label>
-        <input type="date" id="event_date" required>
+        <input type="date" id="event_date" name="event_date" required>
 
         <label for="event_time">Heure :</label>
-        <input type="time" id="event_time" required>
+        <input type="time" id="event_time" name="event_time" required>
 
         <label for="location">Lieu :</label>
-        <input type="text" id="location">
+        <input type="text" id="location" name="location">
+
+        <label for="image">Image de l'événement :</label>
+        <input type="file" id="image" name="image" accept="image/*">
 
         <button type="submit">Créer l'événement</button>
     </form>

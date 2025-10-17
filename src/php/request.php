@@ -82,18 +82,47 @@ if ($requesttype == "inscription") {
             $request = dbRegisterEvent($db, $_POST['id_user'], $_POST['id_event']);
         }
     }
-} elseif($requesttype == "create_event" && $_SERVER['REQUEST_METHOD'] == "POST") {
-    $stmt = $db->prepare("
-        INSERT INTO events (title, description, event_date, event_time, location, created_by)
-        VALUES (:title, :description, :event_date, :event_time, :location, :created_by)
-    ");
-    $stmt->bindParam(':title', $_POST['title']);
-    $stmt->bindParam(':description', $_POST['description']);
-    $stmt->bindParam(':event_date', $_POST['event_date']);
-    $stmt->bindParam(':event_time', $_POST['event_time']);
-    $stmt->bindParam(':location', $_POST['location']);
-    $stmt->bindParam(':created_by', $_POST['id_user']);
-    $request = $stmt->execute();
+} elseif ($requesttype == "create_event" && $_SERVER['REQUEST_METHOD'] == "POST") {
+    
+    $title = $_POST['title'] ?? null;
+    $description = $_POST['description'] ?? null;
+    $event_date = $_POST['event_date'] ?? null;
+    $event_time = $_POST['event_time'] ?? null;
+    $location = $_POST['location'] ?? null;
+    $id_user = $_POST['id_user'] ?? null;
+
+    // Gestion de l'image
+    $imagePath = null;
+    if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
+        $uploadDir = __DIR__ . '/../uploads/'; // absolute path depuis le fichier PHP
+        if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
+        $fileName = time() . '_' . basename($_FILES['image']['name']);
+        $targetPath = $uploadDir . $fileName;
+        move_uploaded_file($_FILES['image']['tmp_name'], $targetPath);
+        $imagePath = 'uploads/' . $fileName;
+    }
+    if ($title && $event_date && $event_time && $id_user) {
+        $stmt = $db->prepare("
+            INSERT INTO events (title, description, event_date, event_time, location, created_by, image_path)
+            VALUES (:title, :description, :event_date, :event_time, :location, :created_by, :image_path)
+        ");
+        $stmt->bindValue(':title', $title);
+        $stmt->bindValue(':description', $description);
+        $stmt->bindValue(':event_date', $event_date);
+        $stmt->bindValue(':event_time', $event_time);
+        $stmt->bindValue(':location', $location);
+        $stmt->bindValue(':created_by', $id_user);
+        $stmt->bindValue(':image_path', $imagePath);
+
+        if ($stmt->execute()) {
+            $request = true;
+        } else {
+            $error = $stmt->errorInfo();
+            $request = ["error" => $error[2]]; // message d'erreur exact
+        }
+    } else {
+        $request = ["error" => "Champs manquants"];
+    }
 } elseif($requesttype == "my_events" && $_SERVER['REQUEST_METHOD'] == "GET"){
     $id_user = $_GET['id_user'];
     $stmt = $db->prepare("SELECT * FROM events WHERE created_by=:id_user ORDER BY event_date, event_time");

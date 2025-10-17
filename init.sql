@@ -14,8 +14,9 @@ CREATE TABLE events (
     description TEXT,
     event_date DATE NOT NULL,
     event_time TIME NOT NULL,
-    is_private BOOLEAN,
+    is_private BOOLEAN DEFAULT FALSE,
     location VARCHAR(255),
+    image_path VARCHAR(255) DEFAULT NULL,
     created_by INT REFERENCES users(id_user)
 );
 
