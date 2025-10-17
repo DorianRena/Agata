@@ -244,7 +244,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 myEventsContainer.innerHTML = "<p>Vous n'avez créé aucun événement.</p>";
                 return;
             }
-            console.log(events);
             myEventsContainer.innerHTML = events
                 .map(
                     (ev) => `
@@ -275,6 +274,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
         fetch("../php/request.php/create_event", {
             method: "POST",
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
             body: formData,
         })
             .then((res) => res.json())
