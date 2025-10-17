@@ -1,8 +1,5 @@
 <?php
-
-if (php_sapi_name() !== 'cli' && empty($_SERVER['HTTP_X_REQUESTED_WITH'])) {
-    die('Accès interdit');
-}
+define('ALLOW_ACCESS', true);
 
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
@@ -176,7 +173,7 @@ if ($requesttype == "inscription") {
     $emails = isset($_POST['emails']) ? array_map('trim', explode(',', $_POST['emails'])) : [];
 
 
-    if ($_POST['is_private'] || !empty($emails)) {
+    if ($_POST['is_private']) {
         $added = [];
 
         // Vérifie que l'événement existe et est bien privé

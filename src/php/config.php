@@ -1,7 +1,7 @@
 <?php
-    if (php_sapi_name() !== 'cli' && empty($_SERVER['HTTP_X_REQUESTED_WITH'])) {
-        die('Accès interdit');
-    }
+if (!defined('ALLOW_ACCESS')) {
+    die('Accès interdit');
+}
     define('DB_SERVER', getenv('DB_SERVER') ?: 'db');
     define('DB_PORT', getenv('DB_PORT') ?: '5432');
     define('DB_NAME', getenv('DB_NAME') ?: 'agata_db');

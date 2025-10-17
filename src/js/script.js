@@ -319,9 +319,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
         fetch("../php/request.php/create_event", {
             method: "POST",
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
             body: formData,
         })
             .then((res) => res.json())
