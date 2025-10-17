@@ -1,5 +1,5 @@
 <?php
-if (php_sapi_name() !== 'cli' && empty($_SERVER['HTTP_X_REQUESTED_WITH'])) {
+if (!defined('ALLOW_ACCESS')) {
     die('Accès interdit');
 }
 

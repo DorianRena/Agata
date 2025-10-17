@@ -1,14 +1,26 @@
 # Agata
-Ce projet est une application web intentionnelement vulnérable qui permet de  créer, gérer et s’inscrire à des événements. 
+Agata est une application web intentionnellement vulnérable qui permet de créer, gérer et s’inscrire à des événements.
 Le backend est en PHP/MySQL et le frontend en HTML/CSS/JS.
 Le tout est conteneurisé avec Docker et Docker Compose.
 
-## Installation 
-### Prérequis
-- Docker
-- DockerCompose
+## Fonctionnalités de l'application
+### Gestion des utilisateurs
+- Les utilisateurs peuvent créer un compte avec nom, prénom, date de naissance, email et mot de passe.
+- Les utilisateurs non-connecté n'ont accès qu'à la page d'accueil et la liste des events
+###  Gestion des events
+#### Voir les events
+- Les utilisateurs peuvent consulter les événements par date.
+- Les utilisateurs connectés peuvent s'inscrire à des événements ou se désinscrire 
+- Les utilisateurs connectés peuvent voir des événements auxquels eux seuls sont invités
+#### Créer un événement
+- Les utilisateurs connectés peuvent créer un événement et voir tous ceux dont ils sont l'organisateur
+- Les utilisateurs peuvent créer des événements avec :
+Titre / Description / Date / Heure / Lieu / Image (optionnelle) / Sur invitation (optionnelle)
+- Il est possible d'ajouter autant d'utilisateurs que souhaité à la liste d'invitations (adresses email séparées par des ",") 
+#### Supprimer/modifier un événement
+- Les events créés par un utilisateur peuvent être modifiés ou supprimés
 
-### Structure du projet
+## Structure du projet
 ```
 agata/
 ├─ src/
@@ -26,14 +38,36 @@ agata/
 ├─ README.md
 └─ init.sql             # Scripts pour initialiser la BDD
 ```
+
+## Installation 
+### Prérequis
+- Docker
+- DockerCompose
+
 ### Étapes d'installation
-#### Cloner le projet
+#### 1 - Cloner le projet
 ```bash
 git clone https://github.com/DorianRena/Agata agata
 cd agata
 ```
-#### Construire les conteneurs et les lancés
+#### 2 - Construire les conteneurs et les lancés
 ```bash
 docker-compose up --build
 ```
+Accéder à la base de données (si nécessaire)
+```bash
+docker exec -it agata_db bash 
+psql -U agata -d agata_db
+```
+#### 3 - Accéder à l’application
+Ouvrir le navigateur à l'adresse :
+ **http://localhost:8080/**
 
+#### 4 - Arrêter proprement 
+```bash
+docker compose down -v
+```
+Supprimer la BDD (si nécessaire et si le conteneur est éteint) :
+```bash
+docker volume rm agata_db_data
+```

@@ -2,9 +2,6 @@
 function ajaxGet(url, callback) {
     fetch(url, {
         method: 'GET',
-        headers: {
-            'X-Requested-With': 'XMLHttpRequest' // Indique que c'est une requête AJAX
-        }
     })
     .then(response => response.json())
     .then(data => callback(data))
