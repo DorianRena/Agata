@@ -144,29 +144,33 @@ function loadEvents() {
                 return;
             }
 
-            eventContainer.innerHTML = events
-                .map((event) => {
-                    let actionHtml = "";
-                    if (userId) {
-                        if (event.registered) {
-                            actionHtml = `<button class="btn-unregister" onclick="unregisterEvent(${event.id_event}, this)">Se désinscrire</button>`;
-                        } else {
-                            actionHtml = `<button onclick="registerEvent(${event.id_event}, this)">S'inscrire</button>`;
-                        }
+            eventContainer.innerHTML = events.map(event => {
+                const isPrivate = event.is_private ? true : false;
+                const privateLabel = isPrivate ? "Événement privé" : "Événement public";
+
+                let actionHtml = '';
+                if(userId){
+                    if(event.registered){
+                        // Déjà inscrit → bouton outline pour se désinscrire
+                        actionHtml = `<button class="btn-unregister" onclick="unregisterEvent(${event.id_event}, this)">Se désinscrire</button>`;
+                    } else {
+                        // Non inscrit → bouton classique pour s'inscrire
+                        actionHtml = `<button onclick="registerEvent(${event.id_event}, this)">S'inscrire</button>`;
                     }
-                    return `
-                        <div class="event-card">
-                            ${event.image_path ? `<img src="../${event.image_path}" class="event-img">` : ""}
-                            <h3>${event.title}</h3>
-                            <p><strong>Heure :</strong> ${event.event_time}</p>
-                            <p><strong>Lieu :</strong> ${event.location || "Non précisé"}</p>
-                            <p>${event.description}</p>
-                            <p><strong>Organisateur :</strong> ${event.org_prenom} ${event.org_nom}</p>
-                            ${actionHtml}
-                        </div>
-                    `;
-                })
-                .join("");
+                }
+                return `
+                    <div class="event-card">
+                        ${event.image_path ? `<img src="../${event.image_path}" class="event-img">` : ""}
+                        <h3>${event.title}</h3>
+                        <p><strong>Heure :</strong> ${event.event_time}</p>
+                        <p><strong>Lieu :</strong> ${event.location || 'Non précisé'}</p>
+                        <p>${event.description}</p>
+                        <p><strong>Organisateur :</strong> ${event.org_prenom} ${event.org_nom}</p>
+                        ${actionHtml}
+                    </div>
+                `;
+                }).join('');
+
         }
     });
 }
@@ -237,28 +241,44 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // --- Chargement des événements de l'utilisateur ---
+    // Charger les événements
     function loadMyEvents() {
         ajaxGet(`../php/request.php/my_events?id_user=${userId}`, (events) => {
-            if (events.length === 0) {
+            if(events.length === 0){
                 myEventsContainer.innerHTML = "<p>Vous n'avez créé aucun événement.</p>";
                 return;
             }
-            myEventsContainer.innerHTML = events
-                .map(
-                    (ev) => `
+
+            myEventsContainer.innerHTML = events.map(ev => {
+                const isPrivate = ev.is_private ? true : false;
+                const privateLabel = isPrivate ? "Événement privé" : "Événement public";
+
+                // Gestion de la liste des invités
+                let inviteListHTML = "";
+                if (isPrivate && ev.invited_users && ev.invited_users.length > 0) {
+                    inviteListHTML = `
+                        <p><strong>Invités :</strong> ${ev.invited_users.join(', ')}</p>
+                    `;
+                } else if (isPrivate) {
+                    inviteListHTML = `
+                        <p><strong>Invités :</strong> Aucun invité</p>
+                    `;
+                }
+
+                return `
                     <div class="event-card" data-id="${ev.id_event}">
                         ${ev.image_path ? `<img src="../${ev.image_path}" class="event-img">` : ""}
                         <h3>${ev.title}</h3>
                         <p><strong>Date :</strong> ${ev.event_date} ${ev.event_time}</p>
-                        <p><strong>Lieu :</strong> ${ev.location || "Non précisé"}</p>
+                        <p><strong>Lieu :</strong> ${ev.location || 'Non précisé'}</p>
                         <p>${ev.description}</p>
+                        <p><em>${privateLabel}</em></p>
+                        ${inviteListHTML}
                         <button onclick="editEvent(${ev.id_event})">Modifier</button>
                         <button onclick="deleteEvent(${ev.id_event})" class="btn-outline">Supprimer</button>
                     </div>
-                `
-                )
-                .join("");
+                `;
+            }).join('');
         });
     }
 
@@ -266,11 +286,36 @@ document.addEventListener("DOMContentLoaded", () => {
     loadMyEvents();
 
     // --- Création d'un événement ---
+    // Création
+    const checkbox = document.getElementById('is_private');
+    const invitationInput = document.getElementById('invitation_list');
+
+    // Fonction pour activer/désactiver le champ
+    const toggleInvitationInput = () => {
+        invitationInput.disabled = !checkbox.checked;
+
+        // Optionnel : on vide le champ si décoché
+        if (!checkbox.checked) {
+            invitationInput.value = '';
+        }
+    };
+    // Sur changement de la checkbox
+    checkbox.addEventListener('change', toggleInvitationInput);
+
     createForm.addEventListener("submit", (e) => {
         e.preventDefault();
 
         const formData = new FormData(createForm);
+        formData.set('is_private', document.getElementById('is_private').checked ? 'true' : 'false');
         formData.append("id_user", userId); // Ajoute l'id_user au formulaire
+
+        if (invitationInput) {
+            invitationEmails = invitationInput.value
+                .split(',')
+                .map(e => e.trim())
+                .filter(e => e.includes('@'));
+            formData.set("emails", invitationEmails);
+        }
 
         fetch("../php/request.php/create_event", {
             method: "POST",
@@ -293,6 +338,35 @@ document.addEventListener("DOMContentLoaded", () => {
             .catch((err) => console.error(err));
     });
 
+    // Modifier un événement
+    window.editEvent = function(id_event){
+        const card = document.querySelector(`.event-card[data-id='${id_event}']`);
+        const title = prompt("Nouveau titre :", card.querySelector("h3").textContent);
+        const desc = prompt("Nouvelle description :", card.querySelector("p:nth-of-type(3)").textContent);
+        const date = prompt("Nouvelle date (YYYY-MM-DD) :", card.querySelector("p:nth-of-type(1)").textContent.split(' ')[2]);
+        const time = prompt("Nouvelle heure (HH:MM) :", card.querySelector("p:nth-of-type(1)").textContent.split(' ')[3]);
+        const location = prompt("Nouveau lieu :", card.querySelector("p:nth-of-type(2)").textContent.replace("Lieu : ", ""));
+
+        // --- Ajout des champs pour un event privé ---
+        const isPrivate = confirm("Cet événement est-il sur invitation ?");
+        let invitationEmails = [];
+
+        if (isPrivate) {
+            const emailsInput = prompt("Entrez les emails invités (séparés par des virgules) :", "");
+            if (emailsInput) {
+                invitationEmails = emailsInput
+                    .split(',')
+                    .map(e => e.trim())
+                    .filter(e => e.includes('@'));
+            }
+        }
+
+        ajaxPost("../php/request.php/edit_event", { id_event, title, description: desc, event_date: date, event_time: time, location, is_private: isPrivate, emails: invitationEmails }, (res)=>{
+            if(res === true) loadMyEvents();
+            else alert("Erreur lors de la modification.");
+        });
+    }
+
     // --- Suppression d'un événement ---
     window.deleteEvent = function (id_event) {
         if (confirm("Voulez-vous vraiment supprimer cet événement ?")) {
@@ -301,24 +375,5 @@ document.addEventListener("DOMContentLoaded", () => {
                 else alert("Erreur lors de la suppression.");
             });
         }
-    };
-
-    // --- Modification d'un événement ---
-    window.editEvent = function (id_event) {
-        const card = document.querySelector(`.event-card[data-id='${id_event}']`);
-        const title = prompt("Nouveau titre :", card.querySelector("h3").textContent);
-        const description = prompt("Nouvelle description :", card.querySelector("p:nth-of-type(3)").textContent);
-        const date = prompt("Nouvelle date (YYYY-MM-DD) :", "");
-        const time = prompt("Nouvelle heure (HH:MM) :", "");
-        const location = prompt("Nouveau lieu :", "");
-
-        ajaxPost(
-            "../php/request.php/edit_event",
-            { id_event, title, description, event_date: date, event_time: time, location },
-            (res) => {
-                if (res === true) loadMyEvents();
-                else alert("Erreur lors de la modification.");
-            }
-        );
-    };
+    }
 });
