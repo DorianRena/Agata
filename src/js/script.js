@@ -306,7 +306,16 @@ document.addEventListener("DOMContentLoaded", () => {
         e.preventDefault();
 
         const formData = new FormData(createForm);
+        formData.set('is_private', document.getElementById('is_private').checked ? 'true' : 'false');
         formData.append("id_user", userId); // Ajoute l'id_user au formulaire
+
+        if (invitationInput) {
+            invitationEmails = invitationInput.value
+                .split(',')
+                .map(e => e.trim())
+                .filter(e => e.includes('@'));
+            formData.set("emails", invitationEmails);
+        }
 
         fetch("../php/request.php/create_event", {
             method: "POST",
