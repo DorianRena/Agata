@@ -27,8 +27,8 @@ CREATE TABLE registrations (
 
 CREATE TABLE event_allowed_users (
      id_event INT REFERENCES events(id_event) ON DELETE CASCADE,
-     id_user INT REFERENCES users(id_user) ON DELETE CASCADE,
-     PRIMARY KEY (id_event, id_user)
+     email VARCHAR(100) REFERENCES users(email) ON DELETE CASCADE,
+     PRIMARY KEY (id_event, email)
 );
 
 INSERT INTO users (nom, prenom, date_naissance, email, mdp)
@@ -47,6 +47,6 @@ VALUES
 ('Private Event', 'Diner 3 étoiles', true, CURRENT_DATE + INTERVAL '2 day', '19:00', 1, 'Salle 106'),
 ('Hidden Event', 'flag : bROkEN 4cC3$5 CONTr0L', true, CURRENT_DATE + INTERVAL '1 day', '19:00', 1, 'Salle 1');
 
-INSERT INTO event_allowed_users (id_event, id_user)
+INSERT INTO event_allowed_users (id_event, email)
 VALUES
-(6, 1);
+(6, 'jean.dupont@example.com');

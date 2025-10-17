@@ -144,6 +144,9 @@ function loadEvents() {
             }
 
             eventContainer.innerHTML = events.map(event => {
+                const isPrivate = event.is_private ? true : false;
+                const privateLabel = isPrivate ? "Événement privé" : "Événement public";
+
                 let actionHtml = '';
                 if(userId){
                     if(event.registered){
@@ -162,6 +165,7 @@ function loadEvents() {
                         <p>${event.description}</p>
                         <p><strong>Organisateur :</strong> ${event.org_prenom} ${event.org_nom}</p>
                         ${actionHtml}
+                        <p>${ev.description}</p>
                     </div>
                 `;
                 }).join('');
@@ -233,6 +237,22 @@ if (createForm && myEventsContainer) {
         loadMyEvents(); // charge les événements de l'utilisateur
 
         // Création
+        const checkbox = document.getElementById('is_private');
+        const invitationInput = document.getElementById('invitation_list');
+
+        // Fonction pour activer/désactiver le champ
+        const toggleInvitationInput = () => {
+            invitationInput.disabled = !checkbox.checked;
+
+            // Optionnel : on vide le champ si décoché
+            if (!checkbox.checked) {
+                invitationInput.value = '';
+            }
+        };
+
+        // Sur changement de la checkbox
+        checkbox.addEventListener('change', toggleInvitationInput);
+
         createForm.addEventListener("submit", (e) => {
             e.preventDefault();
             const data = {
@@ -241,13 +261,26 @@ if (createForm && myEventsContainer) {
                 event_date: document.getElementById("event_date").value,
                 event_time: document.getElementById("event_time").value,
                 location: document.getElementById("location").value,
+                is_private: document.getElementById("is_private").checked,
                 id_user: userId
             };
+            console.log(data)
+            if (data.is_private) {
+                console.log(invitationInput.value)
+                if (invitationInput) {
+                    invitationEmails = invitationInput.value
+                        .split(',')
+                        .map(e => e.trim())
+                        .filter(e => e.includes('@'));
+                    data.emails = invitationEmails
+                }
+            }
+            console.log(data)
+            createForm.reset();
+            loadMyEvents();
             ajaxPost("../php/request.php/create_event", data, (res) => {
-                if(res === true){
+                if (res === true) {
                     alert("Événement créé !");
-                    createForm.reset();
-                    loadMyEvents();
                 } else {
                     alert("Erreur lors de la création de l'événement.");
                 }
@@ -262,16 +295,35 @@ if (createForm && myEventsContainer) {
                     return;
                 }
 
-                myEventsContainer.innerHTML = events.map(ev => `
-                    <div class="event-card" data-id="${ev.id_event}">
-                        <h3>${ev.title}</h3>
-                        <p><strong>Date :</strong> ${ev.event_date} ${ev.event_time}</p>
-                        <p><strong>Lieu :</strong> ${ev.location || 'Non précisé'}</p>
-                        <p>${ev.description}</p>
-                        <button onclick="editEvent(${ev.id_event})">Modifier</button>
-                        <button onclick="deleteEvent(${ev.id_event})" class="btn-outline">Supprimer</button>
-                    </div>
-                `).join('');
+                myEventsContainer.innerHTML = events.map(ev => {
+                    const isPrivate = ev.is_private ? true : false;
+                    const privateLabel = isPrivate ? "Événement privé" : "Événement public";
+
+                    // Gestion de la liste des invités
+                    let inviteListHTML = "";
+                    if (isPrivate && ev.invited_users && ev.invited_users.length > 0) {
+                        inviteListHTML = `
+                            <p><strong>Invités :</strong> ${ev.invited_users.join(', ')}</p>
+                        `;
+                    } else if (isPrivate) {
+                        inviteListHTML = `
+                            <p><strong>Invités :</strong> Aucun invité</p>
+                        `;
+                    }
+
+                    return `
+                        <div class="event-card" data-id="${ev.id_event}">
+                            <h3>${ev.title}</h3>
+                            <p><strong>Date :</strong> ${ev.event_date} ${ev.event_time}</p>
+                            <p><strong>Lieu :</strong> ${ev.location || 'Non précisé'}</p>
+                            <p>${ev.description}</p>
+                            <p><em>${privateLabel}</em></p>
+                            ${inviteListHTML}
+                            <button onclick="editEvent(${ev.id_event})">Modifier</button>
+                            <button onclick="deleteEvent(${ev.id_event})" class="btn-outline">Supprimer</button>
+                        </div>
+                    `;
+                }).join('');
             });
         }
 
@@ -280,11 +332,25 @@ if (createForm && myEventsContainer) {
             const card = document.querySelector(`.event-card[data-id='${id_event}']`);
             const title = prompt("Nouveau titre :", card.querySelector("h3").textContent);
             const desc = prompt("Nouvelle description :", card.querySelector("p:nth-of-type(3)").textContent);
-            const date = prompt("Nouvelle date (YYYY-MM-DD) :", card.querySelector("p:nth-of-type(1)").textContent.split(' ')[1]);
-            const time = prompt("Nouvelle heure (HH:MM) :", card.querySelector("p:nth-of-type(1)").textContent.split(' ')[2]);
+            const date = prompt("Nouvelle date (YYYY-MM-DD) :", card.querySelector("p:nth-of-type(1)").textContent.split(' ')[2]);
+            const time = prompt("Nouvelle heure (HH:MM) :", card.querySelector("p:nth-of-type(1)").textContent.split(' ')[3]);
             const location = prompt("Nouveau lieu :", card.querySelector("p:nth-of-type(2)").textContent.replace("Lieu : ", ""));
 
-            ajaxPost("../php/request.php/edit_event", { id_event, title, description: desc, event_date: date, event_time: time, location }, (res)=>{
+            // --- Ajout des champs pour un event privé ---
+            const isPrivate = confirm("Cet événement est-il sur invitation ?");
+            let invitationEmails = [];
+
+            if (isPrivate) {
+                const emailsInput = prompt("Entrez les emails invités (séparés par des virgules) :", "");
+                if (emailsInput) {
+                    invitationEmails = emailsInput
+                        .split(',')
+                        .map(e => e.trim())
+                        .filter(e => e.includes('@'));
+                }
+            }
+
+            ajaxPost("../php/request.php/edit_event", { id_event, title, description: desc, event_date: date, event_time: time, location, is_private: isPrivate, emails: invitationEmails }, (res)=>{
                 if(res === true) loadMyEvents();
                 else alert("Erreur lors de la modification.");
             });
