@@ -175,7 +175,7 @@ if ($requesttype == "inscription") {
     $emails = isset($_POST['emails']) ? array_map('trim', explode(',', $_POST['emails'])) : [];
 
 
-    if ($_POST['is_private']) {
+    if ($_POST['is_private']=='true') {
         $added = [];
 
         // Vérifie que l'événement existe et est bien privé
