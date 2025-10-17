@@ -1,4 +1,9 @@
 <?php
+
+if (php_sapi_name() !== 'cli' && empty($_SERVER['HTTP_X_REQUESTED_WITH'])) {
+    die('Accès interdit');
+}
+
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
@@ -83,14 +88,13 @@ if ($requesttype == "inscription") {
         }
     }
 } elseif ($requesttype == "create_event" && $_SERVER['REQUEST_METHOD'] == "POST") {
-    
+
     $title = $_POST['title'] ?? null;
     $description = $_POST['description'] ?? null;
     $event_date = $_POST['event_date'] ?? null;
     $event_time = $_POST['event_time'] ?? null;
     $location = $_POST['location'] ?? null;
     $id_user = $_POST['id_user'] ?? null;
-
     // Gestion de l'image
     $imagePath = null;
     if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {

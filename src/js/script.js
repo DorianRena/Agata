@@ -77,7 +77,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (userId) {
             nav.innerHTML = `
-                <a href="accueil.html" ${page === "accueil.html" ? "class='active'" : ""}>Accueil</a>
+                <a href="index.html" ${page === "index.html" ? "class='active'" : ""}>Accueil</a>
                 <a href="events.html" ${page === "events.html" ? "class='active'" : ""}>Événements</a>
                 <a href="create_event.html" ${page === "create_event.html" ? "class='active'" : ""}>Créer un événement</a>
                 <span class="user-info">${prenom} ${nom}</span>
@@ -86,11 +86,11 @@ document.addEventListener("DOMContentLoaded", () => {
             const logoutBtn = document.getElementById("logoutBtn");
             logoutBtn.addEventListener("click", () => {
                 localStorage.clear();
-                window.location.href = "accueil.html";
+                window.location.href = "index.html";
             });
         } else {
             nav.innerHTML = `
-                <a href="accueil.html" ${page === "accueil.html" ? "class='active'" : ""}>Accueil</a>
+                <a href="index.html" ${page === "index.html" ? "class='active'" : ""}>Accueil</a>
                 <a href="events.html" ${page === "events.html" ? "class='active'" : ""}>Événements</a>
                 <a href="login.html" ${page === "login.html" ? "class='active'" : ""}>Connexion</a>
                 <a href="register.html" ${page === "register.html" ? "class='active'" : ""}>Inscription</a>
@@ -229,10 +229,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const userId = localStorage.getItem("userId");
 
     // Vérifie si l'utilisateur est connecté
-    if (!userId) {
-        alert("Vous devez être connecté pour accéder à cette page.");
-        window.location.href = "login.html";
-        return;
+    if (window.location.pathname.endsWith("create_event.html")) {
+        if (!userId) {
+            alert("Vous devez être connecté pour accéder à cette page.");
+            window.location.href = "login.html";
+            return;
+        }
     }
 
     // --- Chargement des événements de l'utilisateur ---
@@ -242,7 +244,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 myEventsContainer.innerHTML = "<p>Vous n'avez créé aucun événement.</p>";
                 return;
             }
-
+            console.log(events);
             myEventsContainer.innerHTML = events
                 .map(
                     (ev) => `
