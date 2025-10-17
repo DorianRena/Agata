@@ -5,6 +5,8 @@ ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
 require_once('database.php');
+require_once('UserPref.php');
+require_once('Debug.php');
 $db = Database::connexionBD();
 
 // Récupère la route
@@ -281,7 +283,6 @@ if ($requesttype == "inscription") {
 } elseif($requesttype == "user_preferences" && $_SERVER['REQUEST_METHOD'] == "GET"){
     // vérifier existence puis lire
     if (isset($_COOKIE['user_preferences'])) {
-        echo serialize(new UserPref([]));
         $cookie = $_COOKIE['user_preferences'];
         $serialized = urldecode($cookie);
         $user_pref = unserialize($serialized);
