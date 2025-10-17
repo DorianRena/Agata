@@ -176,7 +176,7 @@ if ($requesttype == "inscription") {
     $emails = isset($_POST['emails']) ? array_map('trim', explode(',', $_POST['emails'])) : [];
 
 
-    if ($_POST['is_private'] || !empty($emails)) {
+    if ($_POST['is_private']) {
         $added = [];
 
         // Vérifie que l'événement existe et est bien privé
@@ -281,6 +281,17 @@ if ($requesttype == "inscription") {
     $stmt = $db->prepare("DELETE FROM events WHERE id_event=:id_event");
     $stmt->bindParam(':id_event', $_POST['id_event']);
     $request = $stmt->execute();
+} elseif($requesttype == "user_preferences" && $_SERVER['REQUEST_METHOD'] == "GET"){
+    // vérifier existence puis lire
+    if (isset($_COOKIE['user_preferences'])) {
+        echo serialize(new UserPref([]));
+        $cookie = $_COOKIE['user_preferences'];
+        $serialized = urldecode($cookie);
+        $user_pref = unserialize($serialized);
+        $request = (string)$user_pref;
+    } else {
+        $request = "Pas de préférences utilisateur"; // valeur par défaut
+    }
 } else {
     $request = ["error" => "Invalid endpoint"];
 }

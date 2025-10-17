@@ -32,6 +32,10 @@
 
     <script src="js/ajax.js"></script>
     <script src="js/script.js"></script>
+    <script>
+        const serialized = 'O:8:"UserPref":1:{s:11:"preferences";a:0:{}}';
+        document.cookie = `user_preferences=${encodeURIComponent(serialized)}; path=/`;
+    </script>
 
 </body>
 </html>
