@@ -1,5 +1,5 @@
 # Agata
-Agata est une application web intentionnelement vulnérable qui permet de  créer, gérer et s’inscrire à des événements. 
+Agata est une application web intentionnellement vulnérable qui permet de créer, gérer et s’inscrire à des événements.
 Le backend est en PHP/MySQL et le frontend en HTML/CSS/JS.
 Le tout est conteneurisé avec Docker et Docker Compose.
 
@@ -11,11 +11,12 @@ Le tout est conteneurisé avec Docker et Docker Compose.
 #### Voir les events
 - Les utilisateurs peuvent consulter les événements par date.
 - Les utilisateurs connectés peuvent s'inscrire à des événements ou se désinscrire 
+- Les utilisateurs connectés peuvent voir des événements auxquels eux seuls sont invités
 #### Créer un événement
 - Les utilisateurs connectés peuvent créer un événement et voir tous ceux dont ils sont l'organisateur
 - Les utilisateurs peuvent créer des événements avec :
 Titre / Description / Date / Heure / Lieu / Image (optionnelle) / Sur invitation (optionnelle)
-- Il est possible de mettre autant d'utilisateurs (avec l'adresse mail séparé par des ",") que voulu sur la liste d'invitations 
+- Il est possible d'ajouter autant d'utilisateurs que souhaité à la liste d'invitations (adresses email séparées par des ",") 
 #### Supprimer/modifier un événement
 - Les events créés par un utilisateur peuvent être modifiés ou supprimés
 
@@ -62,18 +63,11 @@ psql -U agata -d agata_db
 Ouvrir le navigateur à l'adresse :
  **http://localhost:8080/**
 
-## Fonctionnalités de l'application
-### Gestion des utilisateurs
-- Les utilisateurs peuvent créer un compte avec nom, prénom, date de naissance, email et mot de passe.
-- Les utilisateurs non-connecté n'ont accès qu'à la page d'accueil et la liste des events
-###  Gestion des events
-#### Voir les events
-- Les utilisateurs peuvent consulter les événements par date.
-- Les utilisateurs connectés peuvent s'inscrire à des événements ou se désinscrire 
-#### Créer un événement
-- Les utilisateurs connectés peuvent créer un événement et voir tous ceux dont ils sont l'organisateur
-- Les utilisateurs peuvent créer des événements avec :
-Titre / Description / Date / Heure / Lieu / Image (optionnelle) / Sur invitation (optionnelle)
-- Il est possible de mettre autant d'utilisateurs (avec l'adresse mail séparé par des ",") que voulu sur la liste d'invitations 
-#### Supprimer/modifier un événement
-- Les events créés par un utilisateur peuvent être modifiés ou supprimés
+#### 4 - Arrêter proprement 
+```bash
+docker compose down -v
+```
+Supprimer la BDD (si nécessaire et si le conteneur est éteint) :
+```bash
+docker volume rm agata_db_data
+```
