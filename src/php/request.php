@@ -258,7 +258,7 @@ if ($requesttype == "inscription") {
     $stmtDel = $db->prepare("DELETE FROM event_allowed_users WHERE id_event = :id_event");
     $stmtDel->bindParam(':id_event', $id_event);
     $stmtDel->execute();
-    if ($_POST['is_private'] && !empty($emails)) {
+    if ($_POST['is_private']) {
         foreach ($emails as $email) {
             // Ajoute dans event_allowed_users
             $stmtInsert = $db->prepare("
